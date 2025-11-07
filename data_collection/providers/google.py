@@ -27,7 +27,8 @@ class GoogleImageProvider(ImageProvider):
         self._cse_id = cse_id or os.getenv("GOOGLE_CSE_ID")
         if not self._api_key or not self._cse_id:
             raise RuntimeError(
-                "GoogleImageProvider requires GOOGLE_API_KEY and GOOGLE_CSE_ID environment variables"
+                "GoogleImageProvider requires GOOGLE_API_KEY and GOOGLE_CSE_ID environment variables "
+                "or the --google-api-key/--google-cse-id CLI options"
             )
 
     async def search(self, species: str, max_results: int) -> List[ImageResult]:

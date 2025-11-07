@@ -104,6 +104,17 @@ provider rate limits and robots.txt rules:
 python -m data_collection.scrape --species-list data/species.txt --provider duckduckgo
 ```
 
+When using the Google Custom Search provider supply credentials either via
+environment variables or the new CLI flags:
+
+```bash
+python -m data_collection.scrape \
+  --species-list data/species.txt \
+  --provider google \
+  --google-api-key YOUR_KEY \
+  --google-cse-id YOUR_CSE_ID
+```
+
 Images and metadata are stored under `data/raw/<provider>/<species>/` and audit
 logs are written to `data/logs/`.
 
