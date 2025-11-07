@@ -120,6 +120,8 @@ to fine-tune pretrained weights or train from scratch on custom datasets.
    > **Tip:** If you are targeting a specific CUDA version, consult the
    > [PyTorch installation selector](https://pytorch.org/get-started/locally/) and adjust the `torch`
    > and `torchvision` versions accordingly before installation.
+   > The requirements file also includes Albumentations, NumPy, and Pillow so that
+   > the augmentation scripts run out of the box.
 
 ## Configuration
 
