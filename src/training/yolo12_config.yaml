@@ -1,0 +1,58 @@
+# Default configuration for training the Ultralytics YOLO12 detector on the Fish Identifier dataset.
+# Adjust paths and hyperparameters to match your environment and dataset characteristics.
+model:
+  # Starting weights. Replace with a local checkpoint to fine-tune from a previous run.
+  weights: "yolo12n.pt"
+  task: detect
+  imgsz: 640
+
+# Dataset description. The YAML file should follow the Ultralytics dataset schema
+# with train/val/test image directories and class names.
+data:
+  yaml: "data/datasets/fish.yaml"
+  cache: true
+  workers: 8
+  persistent_workers: true
+
+train:
+  epochs: 100
+  batch: 16
+  patience: 50
+  optimizer: SGD
+  lr0: 0.01
+  lrf: 0.01
+  momentum: 0.937
+  weight_decay: 0.0005
+  warmup_epochs: 3.0
+  warmup_momentum: 0.8
+  warmup_bias_lr: 0.1
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 0.0
+  translate: 0.1
+  scale: 0.5
+  shear: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.1
+  copy_paste: 0.0
+
+val:
+  batch: 16
+  split: val
+  save_json: true
+  save_hybrid: false
+  conf: 0.25
+  iou: 0.6
+
+predict:
+  conf: 0.25
+  iou: 0.6
+  save: true
+  save_txt: true
+
+logging:
+  project_dir: "artifacts/checkpoints"
+  run_name: "yolo12"
