@@ -83,6 +83,24 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         default=DEFAULT_BROWSER_UA,
         help="Custom user agent for HTTP requests.",
     )
+    parser.add_argument(
+        "--google-api-key",
+        type=str,
+        default=None,
+        help=(
+            "API key for the Google Custom Search provider. Overrides the GOOGLE_API_KEY "
+            "environment variable when provided."
+        ),
+    )
+    parser.add_argument(
+        "--google-cse-id",
+        type=str,
+        default=None,
+        help=(
+            "Custom Search Engine ID for the Google provider. Overrides the GOOGLE_CSE_ID "
+            "environment variable when provided."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -180,7 +198,13 @@ async def run(argv: Iterable[str] | None = None) -> int:
     LOGGER.info("Audit log CSV: %s", csv_path)
     async with AsyncHTTPClient(throttle) as http:
         try:
-            provider = create_provider(args.provider, http)
+            provider_kwargs = {}
+            if args.provider.lower() == "google":
+                provider_kwargs = {
+                    "api_key": args.google_api_key,
+                    "cse_id": args.google_cse_id,
+                }
+            provider = create_provider(args.provider, http, **provider_kwargs)
         except Exception as exc:  # noqa: BLE001
             LOGGER.error("Failed to initialise provider '%s': %s", args.provider, exc)
             return 2
