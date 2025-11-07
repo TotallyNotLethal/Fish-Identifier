@@ -8,6 +8,8 @@ import re
 from typing import List
 from urllib.parse import urlencode
 
+import aiohttp
+
 from ..http import AsyncHTTPClient
 from ..models import ImageResult
 from .base import ImageProvider
@@ -31,17 +33,35 @@ class DuckDuckGoImageProvider(ImageProvider):
             "p": "1",
         }
         results: List[ImageResult] = []
+        seen_urls: set[str | None] = set()
         next_url: str | None = f"{_DDG_IMAGE_API}?{urlencode(params)}"
+        referer = {"Referer": f"{_DDG_PAGE}?{urlencode({'q': species})}"}
+        token_resets = 0
+        max_token_resets = 3
         while next_url and len(results) < max_results:
-            payload = await self.http.fetch_text(
-                next_url,
-                headers={"Referer": f"{_DDG_PAGE}?{urlencode({'q': species})}"},
-            )
+            try:
+                payload = await self.http.fetch_text(next_url, headers=referer)
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 403 and token_resets < max_token_resets:
+                    token_resets += 1
+                    await asyncio.sleep(1.0 * token_resets)
+                    vqd = await self._fetch_vqd(species)
+                    params["vqd"] = vqd
+                    params.pop("s", None)
+                    next_url = f"{_DDG_IMAGE_API}?{urlencode(params)}"
+                    continue
+                raise
+
             data = json.loads(payload)
+            token_resets = 0
             for item in data.get("results", []):
+                image_url = item.get("image")
+                if image_url in seen_urls:
+                    continue
+                seen_urls.add(image_url)
                 results.append(
                     ImageResult(
-                        url=item.get("image"),
+                        url=image_url,
                         source_page=item.get("url"),
                         title=item.get("title"),
                         license=item.get("license"),
@@ -57,6 +77,7 @@ class DuckDuckGoImageProvider(ImageProvider):
             next_url = data.get("next")
             if next_url:
                 next_url = f"https://duckduckgo.com{next_url}"
+                params["s"] = len(results)
             await asyncio.sleep(0.2)
         return results
 
