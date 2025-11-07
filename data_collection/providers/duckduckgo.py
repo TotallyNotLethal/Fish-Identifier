@@ -14,7 +14,7 @@ from .base import ImageProvider
 
 _DDG_PAGE = "https://duckduckgo.com/"
 _DDG_IMAGE_API = "https://duckduckgo.com/i.js"
-_VQD_RE = re.compile(r"vqd='(?P<vqd>[-\w]+)'")
+_VQD_RE = re.compile(r"vqd=(?P<quote>['\"])(?P<vqd>[-\w]+)(?P=quote)")
 
 
 class DuckDuckGoImageProvider(ImageProvider):
@@ -61,8 +61,13 @@ class DuckDuckGoImageProvider(ImageProvider):
         return results
 
     async def _fetch_vqd(self, query: str) -> str:
+        referer = f"{_DDG_PAGE}?{urlencode({'q': query})}"
         page = await self.http.fetch_text(
-            f"{_DDG_PAGE}?{urlencode({'q': query, 'iax': 'images', 'ia': 'images'})}"
+            f"{_DDG_PAGE}?{urlencode({'q': query, 'iax': 'images', 'ia': 'images'})}",
+            headers={
+                "Referer": referer,
+                "User-Agent": self.http.user_agent,
+            },
         )
         match = _VQD_RE.search(page)
         if not match:

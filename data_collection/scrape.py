@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Sequence
 
-from .http import AsyncHTTPClient, ThrottleConfig
+from .http import AsyncHTTPClient, DEFAULT_BROWSER_UA, ThrottleConfig
 from .logging_utils import build_audit_logger
 from .models import DownloadRecord, ImageResult
 from .providers import PROVIDERS, create_provider
@@ -80,7 +80,7 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--user-agent",
         type=str,
-        default="FishIdentifierBot/0.1",
+        default=DEFAULT_BROWSER_UA,
         help="Custom user agent for HTTP requests.",
     )
     return parser.parse_args(argv)
