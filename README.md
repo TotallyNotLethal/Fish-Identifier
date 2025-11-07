@@ -4,6 +4,9 @@ This project prepares and trains an image classifier for fish species. The
 repository now contains scripts that clean scraped imagery, convert annotations
 from popular labeling tools, and produce YOLO-ready datasets.
 
+> 📋 Looking for a copy-paste friendly checklist? Follow the
+[Fish Identifier Workflow Checklist](docs/tutorial.txt).
+
 ## Dataset preparation workflow
 
 1. **Collect raw imagery**

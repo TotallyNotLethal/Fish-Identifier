@@ -1,0 +1,118 @@
+Fish Identifier Workflow Checklist
+=================================
+
+Follow the steps below to prepare, augment, and train the fish detection model. Each section lists the exact commands to run. Run the commands from the repository root unless noted otherwise.
+
+1. Set up the Python environment
+--------------------------------
+- Create and activate a Python 3.9+ environment (virtualenv, conda, or venv).
+- Install the project dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- (Optional) If you need specific CUDA builds, consult the PyTorch installation selector and adjust the `torch` and `torchvision` versions before installing.
+
+2. Collect raw imagery
+----------------------
+- Place any manually gathered images inside `data/raw/`.
+- Use the asynchronous scraper to download species images:
+  ```bash
+  python -m data_collection.scrape --species-list data/species.txt --provider duckduckgo
+  ```
+- Scraped files are stored under `data/raw/<provider>/<species>/`, and audit logs are written to `data/logs/`.
+
+3. Prepare, clean, and split the dataset
+---------------------------------------
+- Deduplicate images, filter tiny assets, and create train/val/test splits:
+  ```bash
+  python data_processing/prepare_dataset.py \
+    --raw-dir data/raw \
+    --output-dir data/processed/images \
+    --min-width 256 --min-height 256 \
+    --train-ratio 0.7 --val-ratio 0.2 --seed 42
+  ```
+- Review the console summary for deduplication statistics and resulting split counts.
+
+4. Label the training data
+--------------------------
+- Annotate fish bounding boxes with a tool such as Label Studio or CVAT.
+- Export annotations (JSON for Label Studio, XML for CVAT) for each dataset split.
+
+5. Convert annotations to YOLO format
+-------------------------------------
+- Generate YOLO TXT labels for each split with the converter script:
+  ```bash
+  # Example for Label Studio exports
+  python data_processing/convert_labels.py convert \
+    --format label-studio \
+    --input path/to/export.json \
+    --images-dir data/processed/images/train \
+    --output-dir data/processed/labels/train \
+    --classes Salmon Tuna Grouper
+
+  # Example for CVAT exports
+  python data_processing/convert_labels.py convert \
+    --format cvat \
+    --input path/to/export.xml \
+    --images-dir data/processed/images/val \
+    --output-dir data/processed/labels/val \
+    --classes Salmon Tuna Grouper
+  ```
+- Repeat the conversion for each split (train/val/test) so labels align with their images.
+
+6. Create the YOLO dataset manifest
+-----------------------------------
+- Build the Ultralytics-compatible dataset YAML:
+  ```bash
+  python data_processing/convert_labels.py manifest \
+    --dataset-root data/processed \
+    --train-dir data/processed/images/train \
+    --val-dir data/processed/images/val \
+    --test-dir data/processed/images/test \
+    --names Salmon Tuna Grouper \
+    --output data/datasets/fish.yaml
+  ```
+
+7. Augment the training split (optional but recommended)
+-------------------------------------------------------
+- Produce augmented images and labels to improve model robustness:
+  ```bash
+  python data_processing/augment_dataset.py \
+    --images-dir data/processed/images/train \
+    --labels-dir data/processed/labels/train \
+    --output-root data/processed/augmented \
+    --augmentations-per-image 2
+  ```
+- Augmented files are stored in `data/processed/augmented/{images,labels}`.
+
+8. Train the YOLO12 detector
+----------------------------
+- Launch training with the provided helper:
+  ```bash
+  python -m src.training.train_yolo12 \
+    --data data/datasets/fish.yaml \
+    --weights yolo12n.pt \
+    --epochs 100
+  ```
+- Pass additional flags such as `--batch-size`, `--imgsz`, or `--run-name` to customise the run.
+- Checkpoints and metrics are written to `artifacts/checkpoints/<run-name>/`.
+
+9. (Optional) Validate or predict with trained weights
+------------------------------------------------------
+- Evaluate the trained model on the validation split:
+  ```bash
+  python -m src.training.train_yolo12 --mode val --data data/datasets/fish.yaml
+  ```
+- Run inference on new imagery:
+  ```bash
+  python -m src.training.train_yolo12 --mode predict \
+    --weights artifacts/checkpoints/yolo12/weights/best.pt \
+    --predict-source "path/to/images/*.jpg"
+  ```
+
+10. Run automated tests (optional)
+----------------------------------
+- Verify label conversions and manifest generation:
+  ```bash
+  pytest
+  ```
