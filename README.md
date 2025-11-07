@@ -73,10 +73,13 @@ from popular labeling tools, and produce YOLO-ready datasets.
    - Augmented images and labels are stored under
      `data/processed/augmented/{images,labels}`.
 
-7. **Train the YOLO model**
-   - With Ultralytics installed, kick off training using the manifest:
+7. **Train the YOLO12 model**
+   - With Ultralytics installed, launch training with the dedicated helper:
      ```bash
-     yolo detect train data=data/datasets/fish.yaml model=yolov8n.pt epochs=100
+     python -m src.training.train_yolo12 \
+       --data data/datasets/fish.yaml \
+       --weights yolo12n.pt \
+       --epochs 100
      ```
 
 ## Testing the tooling
