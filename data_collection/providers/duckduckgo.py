@@ -35,12 +35,18 @@ class DuckDuckGoImageProvider(ImageProvider):
         results: List[ImageResult] = []
         seen_urls: set[str | None] = set()
         next_url: str | None = f"{_DDG_IMAGE_API}?{urlencode(params)}"
-        referer = {"Referer": f"{_DDG_PAGE}?{urlencode({'q': species})}"}
+        referer_url = f"{_DDG_PAGE}?{urlencode({'q': species})}"
+        headers = {
+            "Referer": referer_url,
+            "User-Agent": self.http.user_agent,
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
         token_resets = 0
         max_token_resets = 3
         while next_url and len(results) < max_results:
             try:
-                payload = await self.http.fetch_text(next_url, headers=referer)
+                payload = await self.http.fetch_text(next_url, headers=headers)
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 403 and token_resets < max_token_resets:
                     token_resets += 1
@@ -49,6 +55,7 @@ class DuckDuckGoImageProvider(ImageProvider):
                     params["vqd"] = vqd
                     params.pop("s", None)
                     next_url = f"{_DDG_IMAGE_API}?{urlencode(params)}"
+                    headers["Referer"] = referer_url
                     continue
                 raise
 
