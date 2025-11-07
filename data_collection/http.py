@@ -13,6 +13,12 @@ from urllib.robotparser import RobotFileParser
 import aiohttp
 
 
+DEFAULT_BROWSER_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+)
+
+
 @dataclass(frozen=True)
 class ThrottleConfig:
     """Configuration for request throttling."""
@@ -22,7 +28,7 @@ class ThrottleConfig:
     concurrency: int = 5
     max_retries: int = 3
     backoff_factor: float = 1.5
-    user_agent: str = "FishIdentifierBot/0.1"
+    user_agent: str = DEFAULT_BROWSER_UA
 
 
 class RobotsCache:
@@ -103,6 +109,10 @@ class AsyncHTTPClient:
         if not self._session:
             raise RuntimeError("AsyncHTTPClient must be used as an async context manager")
         return self._session
+
+    @property
+    def user_agent(self) -> str:
+        return self._throttle.user_agent
 
     async def _throttle_wait(self) -> None:
         now = time.monotonic()
