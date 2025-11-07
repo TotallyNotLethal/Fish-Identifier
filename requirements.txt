@@ -1,3 +1,4 @@
+aiohttp>=3.9
 # Core dependencies for training YOLO12 models
 ultralytics>=8.3.0
 # PyTorch provides the deep learning framework used by Ultralytics YOLO
