@@ -1,0 +1,7 @@
+# Core dependencies for training YOLO12 models
+ultralytics>=8.3.0
+# PyTorch provides the deep learning framework used by Ultralytics YOLO
+# Pin to CUDA 11.8 compatible builds by default; adjust as needed for your environment.
+torch>=2.2.0
+# Vision utilities required for data augmentation and evaluation
+torchvision>=0.17.0
