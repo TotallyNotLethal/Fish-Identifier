@@ -65,3 +65,35 @@ mv ~/Downloads/cvat-train-annotations.zip data/annotations/
 Unzip CVAT archives if needed and keep the XML files grouped by split (e.g., `data/annotations/train/*.xml`).
 
 With these steps, your dataset splits will have consistent fish bounding box annotations ready for downstream training pipelines.
+
+## 4. Automate annotations from a single command
+
+If you already have a YOLO detector trained for your fish species, you can let
+the project annotate each split automatically without opening Label Studio or
+CVAT. Run the helper script after installing the dependencies:
+
+```bash
+python data_processing/auto_label.py \
+  --images-root data/processed/images \
+  --output-dir data/annotations/auto \
+  --weights path/to/fish_detector.pt \
+  --class-names Salmon Tuna Grouper
+```
+
+The script processes the `train`, `val`, and `test` subdirectories (configurable
+with `--splits`) and writes Label Studio compatible exports such as
+`data/annotations/auto/label-studio-train.json`. Feed the generated files into
+the conversion step:
+
+```bash
+python data_processing/convert_labels.py convert \
+  --format label-studio \
+  --input data/annotations/auto/label-studio-train.json \
+  --images-dir data/processed/images/train \
+  --output-dir data/processed/labels/train \
+  --classes Salmon Tuna Grouper
+```
+
+Adjust `--weights` to point to the detector you want to use. If you omit
+`--class-names`, the script falls back to the class names baked into the model
+checkpoint.
