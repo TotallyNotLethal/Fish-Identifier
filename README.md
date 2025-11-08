@@ -30,6 +30,15 @@ from popular labeling tools, and produce YOLO-ready datasets.
    - Use a tool such as [Label Studio](https://labelstud.io/) or
      [CVAT](https://www.cvat.ai/) to annotate bounding boxes for fish. Export
      the annotations (JSON for Label Studio, XML for CVAT).
+   - Alternatively, auto-generate Label Studio exports from a pretrained YOLO
+     detector with a single command:
+     ```bash
+     python data_processing/auto_label.py \
+       --images-root data/processed/images \
+       --output-dir data/annotations/auto \
+       --weights path/to/fish_detector.pt \
+       --class-names Salmon Tuna Grouper
+     ```
 
 4. **Convert annotations to YOLO format**
    - Transform exported labels into YOLO TXT files and store them in
